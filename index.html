@@ -1,1 +1,90 @@
-
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yatzy Scorecard</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f0f0; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+        #setup, #game-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .input-group { margin-bottom: 15px; display: flex; gap: 5px; }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #2c3e50; color: white; }
+        .score-input { width: 40px; text-align: center; font-size: 16px; }
+        .invalid { background: #ffcccc; }
+        #game-container { display: none; max-width: 600px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Yatzy</h1>
+    <div id="setup">
+        <div class="input-group">
+            <input type="text" id="p-name" placeholder="Pelaajan nimi">
+            <button onclick="addP()">Lisää</button>
+        </div>
+        <div id="p-list"></div>
+        <button id="s-btn" onclick="start()" disabled style="width:100%; margin-top:10px;">ALOITA PELI</button>
+    </div>
+    <div id="game-container">
+        <table id="table">
+            <thead><tr id="h-row"><th>Peli</th></tr></thead>
+            <tbody id="b-row"></tbody>
+        </table>
+        <button onclick="location.reload()" style="background:#95a5a6; margin-top:20px;">Nollaa peli</button>
+    </div>
+    <script>
+        const players = [];
+        const cats = [
+            { id: '1', n: 'Ykköset', m: 5 }, { id: '2', n: 'Kakkoset', m: 10 }, { id: '3', n: 'Kolmoset', m: 15 },
+            { id: '4', n: 'Neloset', m: 20 }, { id: '5', n: 'Viitoset', m: 25 }, { id: '6', n: 'Kuutoset', m: 30 },
+            { id: 'sum', n: 'Välisumma', r: true }, { id: 'bon', n: 'Bonus', r: true },
+            { id: 's-s', n: 'Pieni suora', f: [0, 15] }, { id: 'l-s', n: 'Suuri suora', f: [0, 20] },
+            { id: 'yatzy', n: 'Yatzy', f: [0, 50] }, { id: 'tot', n: 'YHTEENSÄ', r: true }
+        ];
+        function addP() {
+            const i = document.getElementById('p-name');
+            if (i.value && players.length < 5) {
+                players.push(i.value.toUpperCase());
+                i.value = '';
+                document.getElementById('p-list').innerText = players.join(', ');
+                document.getElementById('s-btn').disabled = false;
+            }
+        }
+        function start() {
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            players.forEach(p => { const th = document.createElement('th'); th.innerText = p; document.getElementById('h-row').appendChild(th); });
+            cats.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${c.n}</td>`;
+                players.forEach((_, pi) => {
+                    const td = document.createElement('td');
+                    if (c.r) { td.id = `r-${c.id}-${pi}`; td.innerText = '0'; }
+                    else { td.innerHTML = `<input type="number" class="score-input" data-p="${pi}" data-c="${c.id}" oninput="calc(${pi})">`; }
+                    tr.appendChild(td);
+                });
+                document.getElementById('b-row').appendChild(tr);
+            });
+        }
+        function calc(pi) {
+            let s = 0, t = 0;
+            document.querySelectorAll(`input[data-p="${pi}"]`).forEach(i => {
+                const v = parseInt(i.value) || 0;
+                const c = cats.find(x => x.id === i.dataset.c);
+                let ok = true;
+                if (c.m && v > c.m) ok = false;
+                if (c.f && !c.f.includes(v)) ok = false;
+                if (!ok) i.classList.add('invalid');
+                else { i.classList.remove('invalid'); if (['1','2','3','4','5','6'].includes(c.id)) s += v; t += v; }
+            });
+            const b = s >= 63 ? 50 : 0;
+            document.getElementById(`r-sum-${pi}`).innerText = s;
+            document.getElementById(`r-bon-${pi}`).innerText = b;
+            document.getElementById(`r-tot-${pi}`).innerText = t + b;
+        }
+    </script>
+</body>
+</html>
