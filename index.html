@@ -3,87 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yatzy Scorecard</title>
+    <title>Yatzy Pohjoismainen</title>
     <style>
-        body { font-family: sans-serif; background: #f0f0f0; display: flex; flex-direction: column; align-items: center; padding: 10px; }
-        #setup, #game-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
-        .input-group { margin-bottom: 15px; display: flex; gap: 5px; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        button { padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background: #2c3e50; color: white; }
-        .score-input { width: 40px; text-align: center; font-size: 16px; }
-        .invalid { background: #ffcccc; }
-        #game-container { display: none; max-width: 600px; overflow-x: auto; }
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --bg: #f4f7f6;
+            --error: #ffcccc;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        h1 { font-size: 1.2rem; color: var(--primary); margin: 5px 0; }
+        
+        #setup, #game-container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        
+        .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        
+        button { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        #start-btn { width: 100%; margin-top: 10px; background: #2980b9; }
+        #start-btn:disabled { background: #bdc3c7; }
+
+        #game-container { display: none; overflow-x: auto; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; min-width: 300px; }
+        th, td { border: 1px solid #eee; padding: 6px 2px; text-align: center; font-size: 13px; }
+        th { background: var(--primary); color: white; }
+        
+        .row-label { text-align: left; padding-left: 8px; font-weight: bold; background: #f8f9fa; min-width: 100px; position: sticky; left: 0; }
+        
+        .score-input { width: 45px; height: 35px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; font-weight: bold; }
+        .invalid { background: var(--error) !important; border: 2px solid #e74c3c; }
+        
+        .bold-row { background: #ecf0f1; font-weight: bold; }
+        .total-row { background: var(--primary); color: white; font-weight: bold; }
+        .sum-display { font-weight: bold; color: #2980b9; }
+
+        #reset-btn { background: #95a5a6; margin-top: 15px; width: 100%; }
     </style>
 </head>
 <body>
-    <h1>Yatzy</h1>
+
+    <h1>Yatzy Scorecard</h1>
+
     <div id="setup">
         <div class="input-group">
-            <input type="text" id="p-name" placeholder="Pelaajan nimi">
+            <input type="text" id="p-name" placeholder="Pelaajan nimi" maxlength="10">
             <button onclick="addP()">Lisää</button>
         </div>
-        <div id="p-list"></div>
-        <button id="s-btn" onclick="start()" disabled style="width:100%; margin-top:10px;">ALOITA PELI</button>
+        <div id="p-list" style="margin-bottom:10px; font-weight:500;"></div>
+        <button id="start-btn" onclick="start()" disabled>ALOITA PELI</button>
     </div>
+
     <div id="game-container">
         <table id="table">
-            <thead><tr id="h-row"><th>Peli</th></tr></thead>
-            <tbody id="b-row"></tbody>
+            <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
+            <tbody id="b-body"></tbody>
         </table>
-        <button onclick="location.reload()" style="background:#95a5a6; margin-top:20px;">Nollaa peli</button>
+        <button id="reset-btn" onclick="location.reload()">Nollaa ja aloita alusta</button>
     </div>
+
     <script>
         const players = [];
         const cats = [
-            { id: '1', n: 'Ykköset', m: 5 }, { id: '2', n: 'Kakkoset', m: 10 }, { id: '3', n: 'Kolmoset', m: 15 },
-            { id: '4', n: 'Neloset', m: 20 }, { id: '5', n: 'Viitoset', m: 25 }, { id: '6', n: 'Kuutoset', m: 30 },
-            { id: 'sum', n: 'Välisumma', r: true }, { id: 'bon', n: 'Bonus', r: true },
-            { id: 's-s', n: 'Pieni suora', f: [0, 15] }, { id: 'l-s', n: 'Suuri suora', f: [0, 20] },
-            { id: 'yatzy', n: 'Yatzy', f: [0, 50] }, { id: 'tot', n: 'YHTEENSÄ', r: true }
+            { id: '1', n: 'Ykköset', m: 5 }, { id: '2', n: 'Kakkoset', m: 10 },
+            { id: '3', n: 'Kolmoset', m: 15 }, { id: '4', n: 'Neloset', m: 20 },
+            { id: '5', n: 'Viitoset', m: 25 }, { id: '6', n: 'Kuutoset', m: 30 },
+            { id: 'sum', n: 'Välisumma', r: true, c: 'bold-row' },
+            { id: 'bon', n: 'Bonus (50)', r: true, c: 'bold-row' },
+            { id: 'p1', n: 'Pari', m: 12 }, { id: 'p2', n: '2 Paria', m: 22 },
+            { id: '3k', n: '3 Samaa', m: 18 }, { id: '4k', n: '4 Samaa', m: 24 },
+            { id: 'ss', n: 'Pieni suora', f: [0, 15] }, { id: 'ls', n: 'Suuri suora', f: [0, 20] },
+            { id: 'fh', n: 'Täyskäsi', m: 28 }, { id: 'ch', n: 'Sattuma', m: 30 },
+            { id: 'yz', n: 'Yatzy', f: [0, 50] },
+            { id: 'tot', n: 'YHTEENSÄ', r: true, c: 'total-row' }
         ];
+
         function addP() {
             const i = document.getElementById('p-name');
-            if (i.value && players.length < 5) {
-                players.push(i.value.toUpperCase());
+            const v = i.value.trim().toUpperCase();
+            if (v && players.length < 5) {
+                players.push(v);
                 i.value = '';
-                document.getElementById('p-list').innerText = players.join(', ');
-                document.getElementById('s-btn').disabled = false;
+                document.getElementById('p-list').innerText = "Pelaajat: " + players.join(', ');
+                document.getElementById('start-btn').disabled = false;
             }
         }
+
         function start() {
             document.getElementById('setup').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
-            players.forEach(p => { const th = document.createElement('th'); th.innerText = p; document.getElementById('h-row').appendChild(th); });
-            cats.forEach(c => {
+            const hr = document.getElementById('h-row');
+            const bb = document.getElementById('b-body');
+
+            players.forEach(p => {
+                const th = document.createElement('th');
+                th.innerText = p;
+                hr.appendChild(th);
+            });
+
+            cats.forEach(cat => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${c.n}</td>`;
+                if (cat.c) tr.className = cat.c;
+                const label = document.createElement('td');
+                label.innerText = cat.n;
+                label.className = 'row-label';
+                tr.appendChild(label);
+
                 players.forEach((_, pi) => {
                     const td = document.createElement('td');
-                    if (c.r) { td.id = `r-${c.id}-${pi}`; td.innerText = '0'; }
-                    else { td.innerHTML = `<input type="number" class="score-input" data-p="${pi}" data-c="${c.id}" oninput="calc(${pi})">`; }
+                    if (cat.r) {
+                        td.id = `r-${cat.id}-${pi}`;
+                        td.innerText = '0';
+                        td.className = 'sum-display';
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.inputMode = 'numeric';
+                        input.className = 'score-input';
+                        input.dataset.p = pi;
+                        input.dataset.c = cat.id;
+                        input.oninput = () => calc(pi);
+                        td.appendChild(input);
+                    }
                     tr.appendChild(td);
                 });
-                document.getElementById('b-row').appendChild(tr);
+                bb.appendChild(tr);
             });
         }
+
         function calc(pi) {
-            let s = 0, t = 0;
-            document.querySelectorAll(`input[data-p="${pi}"]`).forEach(i => {
+            let upper = 0, total = 0;
+            const upperIds = ['1', '2', '3', '4', '5', '6'];
+            const inputs = document.querySelectorAll(`input[data-p="${pi}"]`);
+
+            inputs.forEach(i => {
                 const v = parseInt(i.value) || 0;
                 const c = cats.find(x => x.id === i.dataset.c);
                 let ok = true;
+
                 if (c.m && v > c.m) ok = false;
                 if (c.f && !c.f.includes(v)) ok = false;
-                if (!ok) i.classList.add('invalid');
-                else { i.classList.remove('invalid'); if (['1','2','3','4','5','6'].includes(c.id)) s += v; t += v; }
+
+                if (!ok && i.value !== "") {
+                    i.classList.add('invalid');
+                } else {
+                    i.classList.remove('invalid');
+                    if (upperIds.includes(c.id)) upper += v;
+                    total += v;
+                }
             });
-            const b = s >= 63 ? 50 : 0;
-            document.getElementById(`r-sum-${pi}`).innerText = s;
-            document.getElementById(`r-bon-${pi}`).innerText = b;
-            document.getElementById(`r-tot-${pi}`).innerText = t + b;
+
+            const bonus = upper >= 63 ? 50 : 0;
+            document.getElementById(`r-sum-${pi}`).innerText = upper;
+            document.getElementById(`r-bon-${pi}`).innerText = bonus;
+            document.getElementById(`r-tot-${pi}`).innerText = total + bonus;
         }
     </script>
 </body>
