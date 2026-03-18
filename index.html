@@ -10,14 +10,14 @@
             --accent: #27ae60;
             --bg: #f4f7f6;
             --error: #ffcccc;
-            --inactive: #e0e4e6;
+            --inactive: #d1d8db;
             --active: #ffffff;
         }
 
         html, body {
             overscroll-behavior-y: contain;
             height: 100%;
-            overflow-x: hidden;
+            overflow: hidden; /* Estää sivun hyppimisen */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -41,15 +41,14 @@
         
         button { background: var(--accent); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; }
         #start-btn { width: 100%; margin-top: 10px; background: #2980b9; }
-        #start-btn:disabled { background: #bdc3c7; }
 
-        #game-container { display: none; overflow-x: auto; padding: 5px; }
-        table { width: 100%; border-collapse: collapse; min-width: 350px; background: var(--inactive); }
+        #game-container { display: none; overflow-x: auto; padding: 5px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; min-width: 350px; }
         
-        th, td { border: 1px solid #ccc; padding: 8px 2px; text-align: center; font-size: 14px; transition: all 0.2s; }
+        th, td { border: 1px solid #bbb; padding: 8px 2px; text-align: center; font-size: 14px; transition: background 0.2s; }
         th { background: var(--primary); color: white; cursor: pointer; }
         
-        th.active-p-header { background: #27ae60 !important; color: white !important; }
+        th.active-p-header { background: #27ae60 !important; border-bottom: 3px solid #1e8449; }
 
         .row-label { text-align: left; padding-left: 8px; font-weight: bold; background: #f8f9fa !important; min-width: 115px; position: sticky; left: 0; z-index: 10; }
         
@@ -60,45 +59,51 @@
             width: 48px; 
             height: 38px; 
             text-align: center; 
-            border: 1px solid #ccc; 
+            border: 1px solid #999; 
             border-radius: 4px; 
-            font-size: 18px; 
-            font-weight: bold; 
-            background: transparent;
-            /* Estää selaimen zoomaamisen syötön aikana iPhonessa */
             font-size: 16px; 
+            font-weight: bold; 
+            background: white;
+            color: black;
+            -webkit-appearance: none;
+        }
+
+        /* Kun ruutu on lukittu (ei aktiivinen pelaaja) */
+        .score-input:read-only {
+            background: rgba(0,0,0,0.05);
+            border-color: transparent;
+            color: #777;
         }
         
         .invalid { background: var(--error) !important; border: 2px solid #e74c3c !important; color: #c0392b; }
-        
         .total-row { background: var(--primary) !important; color: white; font-weight: bold; }
         .sum-display { font-weight: bold; color: #2980b9; }
 
         #reset-btn { background: #e74c3c; margin-top: 20px; width: 100%; }
-        .hint { font-size: 12px; color: #7f8c8d; margin-top: 5px; text-align: center; font-weight: 500; }
+        .hint { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>Yatzy pisteet v.8</h1>
+    <h1>Yatzy Scorecard v.9</h1>
 
     <div id="setup">
         <p style="margin-top:0;">Lisää pelaajat (1-6)</p>
         <div class="input-group">
-            <input type="text" id="p-name" placeholder="Pelaajan nimi" maxlength="10">
+            <input type="text" id="p-name" placeholder="Nimi" maxlength="10">
             <button onclick="addP()">Lisää</button>
         </div>
         <div id="p-list" style="margin-bottom:10px; font-weight:500;"></div>
-        <button id="start-btn" onclick="start(true)" disabled>ALOITA PELI</button>
+        <button id="start-btn" onclick="start(true)" disabled style="background:#bdc3c7;">ALOITA PELI</button>
     </div>
 
     <div id="game-container">
-        <p class="hint" id="status-hint">Paina "Valmis" tai Enter vaihtaaksesi vuoroa</p>
+        <div id="status-hint" class="hint">VUORO: -</div>
         <table id="table">
             <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
             <tbody id="b-body"></tbody>
         </table>
-        <button id="reset-btn" onclick="clearGame()">Tyhjennä ja aloita uusi peli</button>
+        <button id="reset-btn" onclick="clearGame()">Nollaa peli</button>
     </div>
 
     <script>
@@ -120,36 +125,32 @@
         ];
 
         function saveGame() {
-            const gameData = {
-                players: players,
-                activePlayer: activePlayerIndex,
-                scores: {}
-            };
-            document.querySelectorAll('.score-input').forEach(input => {
-                gameData.scores[`${input.dataset.c}-${input.dataset.p}`] = input.value;
+            const gameData = { players, activePlayerIndex, scores: {} };
+            document.querySelectorAll('.score-input').forEach(i => {
+                gameData.scores[`${i.dataset.c}-${i.dataset.p}`] = i.value;
             });
-            localStorage.setItem('yatzy_v8_save', JSON.stringify(gameData));
+            localStorage.setItem('yatzy_v9_save', JSON.stringify(gameData));
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('yatzy_v8_save');
+            const saved = localStorage.getItem('yatzy_v9_save');
             if (saved) {
                 const data = JSON.parse(saved);
                 players = data.players;
-                activePlayerIndex = data.activePlayer || 0;
+                activePlayerIndex = data.activePlayerIndex || 0;
                 start(false);
                 Object.keys(data.scores).forEach(key => {
                     const input = document.querySelector(`input[data-c="${key.split('-')[0]}"][data-p="${key.split('-')[1]}"]`);
                     if (input) input.value = data.scores[key];
                 });
                 players.forEach((_, i) => calc(i));
-                updateColors();
+                updateUI();
             }
         }
 
         function clearGame() {
             if (confirm("Nollataanko peli?")) {
-                localStorage.removeItem('yatzy_v8_save');
+                localStorage.removeItem('yatzy_v9_save');
                 location.reload();
             }
         }
@@ -161,50 +162,54 @@
                 players.push(v);
                 i.value = '';
                 document.getElementById('p-list').innerText = "Pelaajat: " + players.join(', ');
-                document.getElementById('start-btn').disabled = false;
+                const btn = document.getElementById('start-btn');
+                btn.disabled = false;
+                btn.style.background = "#2980b9";
             }
         }
 
         function hasErrors(pIdx) {
-            const invalidFields = document.querySelectorAll(`.score-input[data-p="${pIdx}"].invalid`);
-            return invalidFields.length > 0;
+            return document.querySelectorAll(`.score-input[data-p="${pIdx}"].invalid`).length > 0;
         }
 
         function setActive(index) {
-            if (index !== activePlayerIndex && hasErrors(activePlayerIndex)) {
-                document.getElementById('status-hint').innerText = "KORJAA VIRHE ENNEN VUORON VAIHTOA!";
-                document.getElementById('status-hint').style.color = "#e74c3c";
-                return false;
+            if (index === activePlayerIndex) return;
+            if (hasErrors(activePlayerIndex)) {
+                alert("Korjaa punainen virhe ensin!");
+                return;
             }
-            
             activePlayerIndex = index;
-            document.getElementById('status-hint').innerText = "Paina \"Valmis\" tai Enter vaihtaaksesi vuoroa";
-            document.getElementById('status-hint').style.color = "#7f8c8d";
-            updateColors();
+            updateUI();
             saveGame();
-            return true;
         }
 
-        function updateColors() {
+        function updateUI() {
+            const hint = document.getElementById('status-hint');
+            hint.innerText = "VUORO: " + players[activePlayerIndex];
+            hint.style.color = "#27ae60";
+
+            // Päivitä otsikot
             document.querySelectorAll('#h-row th').forEach((th, i) => {
                 if (i === 0) return;
-                if (i - 1 === activePlayerIndex) th.classList.add('active-p-header');
-                else th.classList.remove('active-p-header');
+                th.classList.toggle('active-p-header', (i - 1) === activePlayerIndex);
             });
 
+            // Päivitä sarakkeet ja lukitukset
             document.querySelectorAll('.col-cell').forEach(td => {
-                if (parseInt(td.dataset.pIdx) === activePlayerIndex) td.classList.add('active-col');
-                else td.classList.remove('active-col');
+                const pIdx = parseInt(td.dataset.pIdx);
+                const isActive = (pIdx === activePlayerIndex);
+                td.classList.toggle('active-col', isActive);
+                
+                const input = td.querySelector('input');
+                if (input) {
+                    input.readOnly = !isActive; // TÄMÄ ESTÄÄ CHROMEN MONI-SYÖTÖN
+                }
             });
         }
 
-        function triggerAutoNext(pi, inputElement) {
-            // Varmistetaan, että luku on syötetty ja se on sallittu
-            if (!hasErrors(pi) && inputElement.value !== "") {
-                inputElement.blur(); // Sulkee näppäimistön iPhonessa
-                const nextIdx = (activePlayerIndex + 1) % players.length;
-                setActive(nextIdx);
-            }
+        function triggerNext() {
+            const nextIdx = (activePlayerIndex + 1) % players.length;
+            setActive(nextIdx);
         }
 
         function start(shouldSave) {
@@ -238,30 +243,16 @@
                         const input = document.createElement('input');
                         input.type = 'number';
                         input.inputMode = 'numeric';
-                        input.enterKeyHint = 'done'; // Kertoo iPhonelle näyttää "Valmis"
+                        input.enterKeyHint = 'done';
                         input.className = 'score-input';
                         input.dataset.p = pi;
                         input.dataset.c = cat.id;
                         
                         input.oninput = () => { calc(pi); saveGame(); };
 
-                        // iPhonelle ja iPadiille varmistus: change laukeaa kun näppäimistö suljetaan
-                        input.onchange = () => {
-                            triggerAutoNext(pi, input);
-                        };
-
-                        // Lisätuki fyysiselle enterille (iPad/PC)
-                        input.onkeydown = (e) => {
-                            if (e.key === 'Enter') {
-                                triggerAutoNext(pi, input);
-                            }
-                        };
-
-                        input.onmousedown = (e) => {
-                            if (!setActive(pi)) {
-                                e.preventDefault();
-                            }
-                        };
+                        // iPhonen Chrome: kun näppäimistö sulkeutuu tai painetaan Enteriä
+                        input.onkeydown = (e) => { if(e.key === 'Enter') { input.blur(); } };
+                        input.onblur = () => { if(input.value !== "" && !input.readOnly) triggerNext(); };
 
                         td.appendChild(input);
                     }
@@ -269,7 +260,7 @@
                 });
                 bb.appendChild(tr);
             });
-            updateColors();
+            updateUI();
             if (shouldSave) saveGame();
         }
 
@@ -284,30 +275,21 @@
                 const val = isBlank ? 0 : v;
                 const c = cats.find(x => x.id === i.dataset.c);
                 let ok = true;
-
                 if (!isBlank) {
                     if (c.m && v > c.m) ok = false;
                     if (c.min && v < c.min && v !== 0) ok = false;
                     if (c.f && !c.f.includes(v)) ok = false;
                 }
-
-                if (!ok && !isBlank) i.classList.add('invalid');
-                else {
-                    i.classList.remove('invalid');
+                i.classList.toggle('invalid', !ok && !isBlank);
+                if (ok || isBlank) {
                     if (upperIds.includes(c.id)) upper += val;
                     total += val;
                 }
             });
 
             const bonus = upper >= 63 ? 50 : 0;
-            if(document.getElementById(`r-sum-${pi}`)) document.getElementById(`r-sum-${pi}`).innerText = upper;
-            if(document.getElementById(`r-bon-${pi}`)) document.getElementById(`r-bon-${pi}`).innerText = bonus;
-            if(document.getElementById(`r-tot-${pi}`)) document.getElementById(`r-tot-${pi}`).innerText = total + bonus;
-            
-            if (!hasErrors(pi)) {
-                document.getElementById('status-hint').innerText = "Paina \"Valmis\" tai Enter vaihtaaksesi vuoroa";
-                document.getElementById('status-hint').style.color = "#7f8c8d";
-            }
+            const s = document.getElementById(`r-sum-${pi}`), b = document.getElementById(`r-bon-${pi}`), t = document.getElementById(`r-tot-${pi}`);
+            if(s) s.innerText = upper; if(b) b.innerText = bonus; if(t) t.innerText = total + bonus;
         }
 
         window.onload = loadGame;
