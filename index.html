@@ -46,10 +46,11 @@
         #game-container { display: none; overflow-x: auto; padding: 5px; }
         table { width: 100%; border-collapse: collapse; min-width: 350px; background: var(--inactive); }
         
-        th, td { border: 1px solid #ccc; padding: 8px 2px; text-align: center; font-size: 14px; transition: background 0.2s; }
+        th, td { border: 1px solid #ccc; padding: 8px 2px; text-align: center; font-size: 14px; transition: all 0.2s; }
         th { background: var(--primary); color: white; cursor: pointer; }
         
-        th.active-p-header { background: #27ae60 !important; }
+        /* Aktiivinen pelaaja: Nimi vihreäksi, sarake valkoiseksi */
+        th.active-p-header { background: #27ae60 !important; color: white !important; }
 
         .row-label { text-align: left; padding-left: 8px; font-weight: bold; background: #f8f9fa !important; min-width: 115px; position: sticky; left: 0; z-index: 10; }
         
@@ -62,7 +63,7 @@
             text-align: center; 
             border: 1px solid #ccc; 
             border-radius: 4px; 
-            font-size: 16px; 
+            font-size: 18px; 
             font-weight: bold; 
             background: transparent;
         }
@@ -78,7 +79,7 @@
 </head>
 <body>
 
-    <h1>Yatzy pisteet v.6</h1>
+    <h1>Yatzy pisteet v.7</h1>
 
     <div id="setup">
         <p style="margin-top:0;">Lisää pelaajat (1-6)</p>
@@ -91,7 +92,7 @@
     </div>
 
     <div id="game-container">
-        <p class="hint" id="status-hint">Klikkaa nimeä vaihtaaksesi vuoroa</p>
+        <p class="hint" id="status-hint">Paina Enter sijoittaaksesi tuloksen</p>
         <table id="table">
             <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
             <tbody id="b-body"></tbody>
@@ -126,11 +127,11 @@
             document.querySelectorAll('.score-input').forEach(input => {
                 gameData.scores[`${input.dataset.c}-${input.dataset.p}`] = input.value;
             });
-            localStorage.setItem('yatzy_v6_save', JSON.stringify(gameData));
+            localStorage.setItem('yatzy_v7_save', JSON.stringify(gameData));
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('yatzy_v6_save');
+            const saved = localStorage.getItem('yatzy_v7_save');
             if (saved) {
                 const data = JSON.parse(saved);
                 players = data.players;
@@ -147,7 +148,7 @@
 
         function clearGame() {
             if (confirm("Nollataanko peli?")) {
-                localStorage.removeItem('yatzy_v6_save');
+                localStorage.removeItem('yatzy_v7_save');
                 location.reload();
             }
         }
@@ -163,22 +164,20 @@
             }
         }
 
-        // TÄRKEÄÄ: Tarkistaa onko nykyisellä pelaajalla virheitä
         function hasErrors(pIdx) {
             const invalidFields = document.querySelectorAll(`.score-input[data-p="${pIdx}"].invalid`);
             return invalidFields.length > 0;
         }
 
         function setActive(index) {
-            // Jos yritetään vaihtaa vuoroa, mutta nykyisellä on virhe
             if (index !== activePlayerIndex && hasErrors(activePlayerIndex)) {
                 document.getElementById('status-hint').innerText = "KORJAA VIRHE ENNEN VUORON VAIHTOA!";
                 document.getElementById('status-hint').style.color = "#e74c3c";
-                return false; // Estä vaihto
+                return false;
             }
             
             activePlayerIndex = index;
-            document.getElementById('status-hint').innerText = "Klikkaa nimeä vaihtaaksesi vuoroa";
+            document.getElementById('status-hint').innerText = "Paina Enter sijoittaaksesi tuloksen";
             document.getElementById('status-hint').style.color = "#7f8c8d";
             updateColors();
             saveGame();
@@ -232,16 +231,27 @@
                         input.className = 'score-input';
                         input.dataset.p = pi;
                         input.dataset.c = cat.id;
-                        input.oninput = () => { calc(pi); saveGame(); };
                         
-                        // Kun ruutuun klikataan:
-                        input.onmousedown = (e) => {
-                            if (!setActive(pi)) {
-                                e.preventDefault(); // Estää focus-siirron jos virhe päällä
+                        // Syötön laskenta ja tallennus
+                        input.oninput = () => { calc(pi); saveGame(); };
+
+                        // AUTOMAATTINEN VUORONVAIHTO ENTERILLÄ
+                        input.onkeydown = (e) => {
+                            if (e.key === 'Enter') {
+                                // Tarkistetaan onko luku sallittu
+                                if (!hasErrors(pi) && input.value !== "") {
+                                    input.blur(); // Piilottaa näppäimistön
+                                    const nextIdx = (activePlayerIndex + 1) % players.length;
+                                    setActive(nextIdx);
+                                }
                             }
                         };
-                        input.onfocus = (e) => {
-                            if (activePlayerIndex !== pi) e.target.blur();
+
+                        // Aktivoi sarakkeen kun siihen klikataan (jos ei virheitä)
+                        input.onmousedown = (e) => {
+                            if (!setActive(pi)) {
+                                e.preventDefault();
+                            }
                         };
 
                         td.appendChild(input);
@@ -285,9 +295,8 @@
             if(document.getElementById(`r-bon-${pi}`)) document.getElementById(`r-bon-${pi}`).innerText = bonus;
             if(document.getElementById(`r-tot-${pi}`)) document.getElementById(`r-tot-${pi}`).innerText = total + bonus;
             
-            // Päivitä viestit heti jos virhe poistuu
             if (!hasErrors(pi)) {
-                document.getElementById('status-hint').innerText = "Klikkaa nimeä vaihtaaksesi vuoroa";
+                document.getElementById('status-hint').innerText = "Paina Enter sijoittaaksesi tuloksen";
                 document.getElementById('status-hint').style.color = "#7f8c8d";
             }
         }
