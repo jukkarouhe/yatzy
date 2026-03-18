@@ -3,69 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yatzy Pro - Aktiivinen Vuoro</title>
+    <title>Yatzy Pro Scorecard</title>
     <style>
         :root {
             --primary: #2c3e50;
             --accent: #27ae60;
             --bg: #f4f7f6;
             --error: #ffcccc;
-            --active-col: #e8f4fd; /* Väri aktiiviselle sarakkeelle */
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        h1 { font-size: 1.2rem; color: var(--primary); margin: 5px 0; }
         
-        #setup, #game-container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        #setup, #game-container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #eee; padding: 8px 4px; text-align: center; transition: background 0.3s; }
-        th { background: var(--primary); color: white; font-size: 14px; }
+        .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
         
-        /* Aktiivisen sarakkeen korostus */
-        .active-column { background-color: var(--active-col) !important; }
+        button { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        #start-btn { width: 100%; margin-top: 10px; background: #2980b9; }
+        #start-btn:disabled { background: #bdc3c7; }
+
+        #game-container { display: none; overflow-x: auto; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; min-width: 300px; }
+        th, td { border: 1px solid #eee; padding: 8px 2px; text-align: center; font-size: 14px; }
+        th { background: var(--primary); color: white; }
         
         .row-label { text-align: left; padding-left: 8px; font-weight: bold; background: #f8f9fa; min-width: 110px; position: sticky; left: 0; z-index: 10; }
         
-        .score-input { width: 100%; max-width: 50px; height: 38px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; font-weight: bold; }
-        .score-input:focus { border-color: #3498db; outline: none; background: #fff; box-shadow: 0 0 5px rgba(52,152,219,0.3); }
-        
+        .score-input { width: 48px; height: 38px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; font-weight: bold; -webkit-appearance: none; }
         .invalid { background: var(--error) !important; border: 2px solid #e74c3c; color: #c0392b; }
         
         .bold-row { background: #ecf0f1; font-weight: bold; }
         .total-row { background: var(--primary); color: white; font-weight: bold; }
         .sum-display { font-weight: bold; color: #2980b9; }
 
-        button { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         #reset-btn { background: #95a5a6; margin-top: 15px; width: 100%; }
-        #start-btn { width: 100%; margin-top: 10px; background: #2980b9; }
-        #start-btn:disabled { background: #bdc3c7; }
-        
-        .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
-        input[type="text"] { flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px; }
     </style>
 </head>
 <body>
 
+    <h1>Yatzy pistetaulukko</h1>
+
     <div id="setup">
-        <h2>Yatzy - Pelaajat</h2>
         <div class="input-group">
-            <input type="text" id="p-name" placeholder="Nimi" maxlength="10">
+            <input type="text" id="p-name" placeholder="Pelaajan nimi" maxlength="10">
             <button onclick="addP()">Lisää</button>
         </div>
-        <div id="p-list"></div>
+        <div id="p-list" style="margin-bottom:10px; font-weight:500;"></div>
         <button id="start-btn" onclick="start()" disabled>ALOITA PELI</button>
     </div>
 
-    <div id="game-container" style="display:none;">
+    <div id="game-container">
         <table id="table">
             <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
             <tbody id="b-body"></tbody>
         </table>
-        <button id="reset-btn" onclick="confirmReset()">Nollaa peli</button>
+        <button id="reset-btn" onclick="location.reload()">Nollaa ja aloita alusta</button>
     </div>
 
     <script>
         const players = [];
+        // MÄÄRITELMÄT: min = pienin sallittu luku (jos ei 0), m = maksimi, f = kiinteät arvot
         const cats = [
             { id: '1', n: 'Ykköset', m: 5 }, { id: '2', n: 'Kakkoset', m: 10 },
             { id: '3', n: 'Kolmoset', m: 15 }, { id: '4', n: 'Neloset', m: 20 },
@@ -101,10 +100,9 @@
             const hr = document.getElementById('h-row');
             const bb = document.getElementById('b-body');
 
-            players.forEach((p, idx) => {
+            players.forEach(p => {
                 const th = document.createElement('th');
                 th.innerText = p;
-                th.id = `head-p-${idx}`;
                 hr.appendChild(th);
             });
 
@@ -118,11 +116,10 @@
 
                 players.forEach((_, pi) => {
                     const td = document.createElement('td');
-                    td.className = `col-p-${pi}`; // Luokka sarakkeen värjäystä varten
                     if (cat.r) {
                         td.id = `r-${cat.id}-${pi}`;
                         td.innerText = '0';
-                        td.className += ' sum-display';
+                        td.className = 'sum-display';
                     } else {
                         const input = document.createElement('input');
                         input.type = 'number';
@@ -131,22 +128,12 @@
                         input.dataset.p = pi;
                         input.dataset.c = cat.id;
                         input.oninput = () => calc(pi);
-                        input.onfocus = () => highlightColumn(pi);
                         td.appendChild(input);
                     }
                     tr.appendChild(td);
                 });
                 bb.appendChild(tr);
             });
-            highlightColumn(0); // Aloitetaan ekasta pelaajasta
-        }
-
-        function highlightColumn(pi) {
-            // Poistetaan vanhat korostukset
-            document.querySelectorAll('td, th').forEach(el => el.classList.remove('active-column'));
-            // Lisätään uusi korostus koko sarakkeelle
-            document.querySelectorAll(`.col-p-${pi}`).forEach(el => el.classList.add('active-column'));
-            document.getElementById(`head-p-${pi}`).classList.add('active-column');
         }
 
         function calc(pi) {
@@ -161,11 +148,11 @@
                 const c = cats.find(x => x.id === i.dataset.c);
                 let ok = true;
 
+                // Validointisäännöt
                 if (!isBlank) {
-                    if (v < 0) ok = false;
-                    if (c.m && v > c.m) ok = false;
-                    if (c.min && v < c.min && v !== 0) ok = false;
-                    if (c.f && !c.f.includes(v)) ok = false;
+                    if (c.m && v > c.m) ok = false; // Maksimi ylittyy
+                    if (c.min && v < c.min && v !== 0) ok = false; // Minimi alittuu (mutta 0 sallittu)
+                    if (c.f && !c.f.includes(v)) ok = false; // Ei kuulu kiinteisiin arvoihin
                 }
 
                 if (!ok && !isBlank) {
@@ -181,12 +168,6 @@
             document.getElementById(`r-sum-${pi}`).innerText = upper;
             document.getElementById(`r-bon-${pi}`).innerText = bonus;
             document.getElementById(`r-tot-${pi}`).innerText = total + bonus;
-        }
-
-        function confirmReset() {
-            if (confirm("Haluatko varmasti nollata pelin ja poistaa kaikki pisteet?")) {
-                location.reload();
-            }
         }
     </script>
 </body>
