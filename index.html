@@ -12,12 +12,13 @@
             --error: #ffcccc;
             --inactive: #d1d8db;
             --active: #ffffff;
+            --history-bg: #ebf2f7;
         }
 
         html, body {
             overscroll-behavior-y: contain;
             height: 100%;
-            overflow: hidden; 
+            overflow: auto; /* Sallitaan skrollaus historian kasvaessa */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -34,20 +35,25 @@
 
         h1 { font-size: 1.2rem; color: var(--primary); margin: 5px 0; }
         
-        #setup, #game-container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        #setup, #game-container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin-bottom: 20px; }
         
-        #game-container { display: none; overflow-x: auto; padding: 5px; width: 100%; }
+        #game-container { display: none; padding: 10px; width: 100%; }
 
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
         input[type="text"] { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
         
-        button { background: var(--accent); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        button { color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: opacity 0.2s; }
+        button:active { opacity: 0.8; }
+        
         #start-btn { width: 100%; margin-top: 10px; background: #bdc3c7; }
+        #next-round-btn { width: 100%; background: var(--accent); margin-bottom: 10px; font-size: 1.1rem; }
+        #reset-btn { background: #e74c3c; width: 100%; margin-top: 10px; }
 
+        .table-wrapper { overflow-x: auto; margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; min-width: 350px; }
         
-        th, td { border: 1px solid #bbb; padding: 8px 2px; text-align: center; font-size: 14px; transition: background 0.2s; }
-        th { background: var(--primary); color: white; cursor: pointer; }
+        th, td { border: 1px solid #bbb; padding: 8px 2px; text-align: center; font-size: 14px; }
+        th { background: var(--primary); color: white; }
         
         th.active-p-header { background: #27ae60 !important; border-bottom: 3px solid #1e8449; }
 
@@ -57,29 +63,20 @@
         .active-col { background: var(--active) !important; }
         
         .score-input { 
-            width: 48px; 
-            height: 38px; 
-            text-align: center; 
-            border: 1px solid #999; 
-            border-radius: 4px; 
-            font-size: 16px; 
-            font-weight: bold; 
-            background: white;
-            color: black;
-            -webkit-appearance: none;
+            width: 48px; height: 38px; text-align: center; border: 1px solid #999; 
+            border-radius: 4px; font-size: 16px; font-weight: bold; background: white; color: black;
         }
 
-        .score-input:read-only {
-            background: rgba(0,0,0,0.05);
-            border-color: transparent;
-            color: #777;
-        }
-        
+        .score-input:read-only { background: rgba(0,0,0,0.05); border-color: transparent; color: #777; }
         .invalid { background: var(--error) !important; border: 2px solid #e74c3c !important; color: #c0392b; }
         .total-row { background: var(--primary) !important; color: white; font-weight: bold; }
         .sum-display { font-weight: bold; color: #2980b9; }
 
-        #reset-btn { background: #e74c3c; margin-top: 20px; width: 100%; }
+        /* Historia-tyylit */
+        #history-section { margin-top: 10px; border-top: 2px dashed #ccc; padding-top: 15px; width: 100%; }
+        .history-table { background: var(--history-bg); }
+        .history-table th { background: #34495e; font-size: 12px; }
+        .grand-total-row { background: #d5e6ed; font-weight: 800; font-size: 1.1rem; }
         .hint { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; text-align: center; font-weight: bold; }
     </style>
 </head>
@@ -91,7 +88,7 @@
         <p style="margin-top:0;">Lisää pelaajat (1-6)</p>
         <div class="input-group">
             <input type="text" id="p-name" placeholder="Nimi" maxlength="10">
-            <button onclick="addP()">Lisää</button>
+            <button style="background: var(--accent)" onclick="addP()">Lisää</button>
         </div>
         <div id="p-list" style="margin-bottom:10px; font-weight:500;">Pelaajat: -</div>
         <button id="start-btn" onclick="start(true)" disabled>ALOITA PELI</button>
@@ -99,15 +96,32 @@
 
     <div id="game-container">
         <div id="status-hint" class="hint">VUORO: -</div>
-        <table id="table">
-            <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
-            <tbody id="b-body"></tbody>
-        </table>
-        <button id="reset-btn" onclick="clearGame()">Nollaa peli</button>
+        
+        <div class="table-wrapper">
+            <table id="table">
+                <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
+                <tbody id="b-body"></tbody>
+            </table>
+        </div>
+
+        <button id="next-round-btn" onclick="archiveRound()">Seuraava kierros</button>
+
+        <div id="history-section" style="display:none;">
+            <p style="text-align:center; font-weight:bold; color:var(--primary); margin: 5px 0;">PISTEARKISTO</p>
+            <div class="table-wrapper">
+                <table id="history-table" class="history-table">
+                    <thead><tr id="hist-header"></tr></thead>
+                    <tbody id="hist-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <button id="reset-btn" onclick="clearGame()">Nollaa kaikki ja aloita alusta</button>
     </div>
 
     <script>
         let players = [];
+        let history = []; // Kierroskohtaiset summat tallennetaan tänne
         let activePlayerIndex = 0;
 
         const cats = [
@@ -126,39 +140,100 @@
 
         function saveGame() {
             if (players.length === 0) return;
-            const gameData = { players, activePlayerIndex, scores: {} };
+            const gameData = { players, activePlayerIndex, history, scores: {} };
             document.querySelectorAll('.score-input').forEach(i => {
                 gameData.scores[`${i.dataset.c}-${i.dataset.p}`] = i.value;
             });
-            localStorage.setItem('yatzy_v11_save', JSON.stringify(gameData));
+            localStorage.setItem('yatzy_v12_save', JSON.stringify(gameData));
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('yatzy_v11_save');
+            const saved = localStorage.getItem('yatzy_v12_save');
             if (saved) {
                 const data = JSON.parse(saved);
                 players = data.players;
                 activePlayerIndex = data.activePlayerIndex || 0;
+                history = data.history || [];
                 
-                // Rakennetaan käyttöliittymä ennen arvojen asettamista
                 start(false);
                 
-                // Asetetaan tallennetut arvot
                 Object.keys(data.scores).forEach(key => {
                     const input = document.querySelector(`input[data-c="${key.split('-')[0]}"][data-p="${key.split('-')[1]}"]`);
                     if (input) input.value = data.scores[key];
                 });
                 
                 players.forEach((_, i) => calc(i));
+                renderHistory();
                 updateUI();
             }
         }
 
         function clearGame() {
-            if (confirm("Nollataanko peli?")) {
-                localStorage.removeItem('yatzy_v11_save');
+            if (confirm("Nollataanko koko peli ja historia?")) {
+                localStorage.removeItem('yatzy_v12_save');
                 location.reload();
             }
+        }
+
+        function archiveRound() {
+            if (hasErrors(activePlayerIndex)) {
+                alert("Korjaa punaiset virheet ensin!");
+                return;
+            }
+            
+            // Poimitaan kierroksen tulokset
+            const roundScores = players.map((_, i) => {
+                const total = parseInt(document.getElementById(`r-tot-${i}`).innerText) || 0;
+                return total;
+            });
+
+            history.push(roundScores);
+            
+            // Tyhjennetään nykyinen taulukko
+            document.querySelectorAll('.score-input').forEach(input => input.value = "");
+            players.forEach((_, i) => calc(i));
+            
+            activePlayerIndex = 0;
+            renderHistory();
+            updateUI();
+            saveGame();
+        }
+
+        function renderHistory() {
+            const hSec = document.getElementById('history-section');
+            if (history.length === 0) {
+                hSec.style.display = 'none';
+                return;
+            }
+            hSec.style.display = 'block';
+
+            const head = document.getElementById('hist-header');
+            const body = document.getElementById('hist-body');
+            
+            // Otsikko (Nimet)
+            head.innerHTML = '<th class="row-label">Pelaaja</th>';
+            players.forEach(p => head.innerHTML += `<th>${p}</th>`);
+
+            body.innerHTML = '';
+
+            // SUMMA-rivi (Boldattu, heti nimien alla)
+            const sumRow = document.createElement('tr');
+            sumRow.className = 'grand-total-row';
+            sumRow.innerHTML = '<td class="row-label">KOKONAISSUMMA</td>';
+            
+            players.forEach((_, pi) => {
+                const total = history.reduce((sum, round) => sum + round[pi], 0);
+                sumRow.innerHTML += `<td>${total}</td>`;
+            });
+            body.appendChild(sumRow);
+
+            // Kierrosrivit
+            history.forEach((round, ri) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="row-label">Kierros ${ri + 1}</td>`;
+                round.forEach(score => tr.innerHTML += `<td>${score}</td>`);
+                body.appendChild(tr);
+            });
         }
 
         function addP() {
@@ -216,14 +291,11 @@
 
         function start(shouldSave) {
             if (players.length === 0) return;
-
             document.getElementById('setup').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
             
             const hr = document.getElementById('h-row');
             const bb = document.getElementById('b-body');
-            
-            // Tyhjennetään taulukko varmuuden vuoksi ennen rakentamista
             hr.innerHTML = '<th class="row-label">Peli</th>';
             bb.innerHTML = '';
 
@@ -238,12 +310,10 @@
                 const tr = document.createElement('tr');
                 if (cat.c) tr.className = cat.c;
                 tr.innerHTML = `<td class="row-label">${cat.n}</td>`;
-                
                 players.forEach((_, pi) => {
                     const td = document.createElement('td');
                     td.className = 'col-cell';
                     td.dataset.pIdx = pi;
-                    
                     if (cat.r) {
                         td.id = `r-${cat.id}-${pi}`;
                         td.innerText = '0';
@@ -265,7 +335,6 @@
                 });
                 bb.appendChild(tr);
             });
-            
             updateUI();
             if (shouldSave) saveGame();
         }
@@ -281,16 +350,13 @@
                 const val = isBlank ? 0 : v;
                 const c = cats.find(x => x.id === i.dataset.c);
                 let ok = true;
-                
                 if (!isBlank) {
                     if (v < 0) ok = false; 
                     if (c.m && v > c.m) ok = false;
                     if (c.min && v < c.min && v !== 0) ok = false;
                     if (c.f && !c.f.includes(v)) ok = false;
                 }
-                
                 i.classList.toggle('invalid', !ok && !isBlank);
-                
                 if (ok || isBlank) {
                     const addVal = (v < 0) ? 0 : val;
                     if (upperIds.includes(c.id)) upper += addVal;
@@ -304,6 +370,3 @@
         }
 
         window.onload = loadGame;
-    </script>
-</body>
-</html>
