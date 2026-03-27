@@ -18,7 +18,7 @@
         html, body {
             overscroll-behavior-y: contain;
             height: 100%;
-            overflow: auto; /* Sallitaan skrollaus historian kasvaessa */
+            overflow-y: auto;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -40,16 +40,16 @@
         #game-container { display: none; padding: 10px; width: 100%; }
 
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
-        input[type="text"] { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; color: black; }
         
-        button { color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: opacity 0.2s; }
-        button:active { opacity: 0.8; }
+        button { color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
         
+        #add-btn { background: var(--accent); }
         #start-btn { width: 100%; margin-top: 10px; background: #bdc3c7; }
-        #next-round-btn { width: 100%; background: var(--accent); margin-bottom: 10px; font-size: 1.1rem; }
-        #reset-btn { background: #e74c3c; width: 100%; margin-top: 10px; }
+        #next-round-btn { width: 100%; background: var(--accent); margin: 10px 0; font-size: 1.1rem; }
+        #reset-btn { background: #e74c3c; width: 100%; margin-top: 15px; }
 
-        .table-wrapper { overflow-x: auto; margin-bottom: 15px; }
+        .table-wrapper { overflow-x: auto; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; min-width: 350px; }
         
         th, td { border: 1px solid #bbb; padding: 8px 2px; text-align: center; font-size: 14px; }
@@ -65,6 +65,7 @@
         .score-input { 
             width: 48px; height: 38px; text-align: center; border: 1px solid #999; 
             border-radius: 4px; font-size: 16px; font-weight: bold; background: white; color: black;
+            -webkit-appearance: none;
         }
 
         .score-input:read-only { background: rgba(0,0,0,0.05); border-color: transparent; color: #777; }
@@ -72,10 +73,7 @@
         .total-row { background: var(--primary) !important; color: white; font-weight: bold; }
         .sum-display { font-weight: bold; color: #2980b9; }
 
-        /* Historia-tyylit */
-        #history-section { margin-top: 10px; border-top: 2px dashed #ccc; padding-top: 15px; width: 100%; }
-        .history-table { background: var(--history-bg); }
-        .history-table th { background: #34495e; font-size: 12px; }
+        #history-section { margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 15px; width: 100%; }
         .grand-total-row { background: #d5e6ed; font-weight: 800; font-size: 1.1rem; }
         .hint { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; text-align: center; font-weight: bold; }
     </style>
@@ -88,7 +86,7 @@
         <p style="margin-top:0;">Lisää pelaajat (1-6)</p>
         <div class="input-group">
             <input type="text" id="p-name" placeholder="Nimi" maxlength="10">
-            <button style="background: var(--accent)" onclick="addP()">Lisää</button>
+            <button id="add-btn" onclick="addP()">Lisää</button>
         </div>
         <div id="p-list" style="margin-bottom:10px; font-weight:500;">Pelaajat: -</div>
         <button id="start-btn" onclick="start(true)" disabled>ALOITA PELI</button>
@@ -98,7 +96,7 @@
         <div id="status-hint" class="hint">VUORO: -</div>
         
         <div class="table-wrapper">
-            <table id="table">
+            <table>
                 <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
                 <tbody id="b-body"></tbody>
             </table>
@@ -109,27 +107,27 @@
         <div id="history-section" style="display:none;">
             <p style="text-align:center; font-weight:bold; color:var(--primary); margin: 5px 0;">PISTEARKISTO</p>
             <div class="table-wrapper">
-                <table id="history-table" class="history-table">
+                <table class="history-table">
                     <thead><tr id="hist-header"></tr></thead>
                     <tbody id="hist-body"></tbody>
                 </table>
             </div>
         </div>
 
-        <button id="reset-btn" onclick="clearGame()">Nollaa kaikki ja aloita alusta</button>
+        <button id="reset-btn" onclick="clearGame()">Nollaa peli ja historia</button>
     </div>
 
     <script>
         let players = [];
-        let history = []; // Kierroskohtaiset summat tallennetaan tänne
+        let history = [];
         let activePlayerIndex = 0;
 
         const cats = [
             { id: '1', n: 'Ykköset', m: 5 }, { id: '2', n: 'Kakkoset', m: 10 },
             { id: '3', n: 'Kolmoset', m: 15 }, { id: '4', n: 'Neloset', m: 20 },
             { id: '5', n: 'Viitoset', m: 25 }, { id: '6', n: 'Kuutoset', m: 30 },
-            { id: 'sum', n: 'Välisumma', r: true, c: 'bold-row' },
-            { id: 'bon', n: 'Bonus (50)', r: true, c: 'bold-row' },
+            { id: 'sum', n: 'Välisumma', r: true },
+            { id: 'bon', n: 'Bonus (50)', r: true },
             { id: 'p1', n: 'Pari', min: 2, m: 12 }, { id: 'p2', n: '2 Paria', min: 6, m: 22 },
             { id: '3k', n: '3 Samaa', min: 3, m: 18 }, { id: '4k', n: '4 Samaa', min: 4, m: 24 },
             { id: 'ss', n: 'Pieni suora', f: [0, 15] }, { id: 'ls', n: 'Iso suora', f: [0, 20] },
@@ -138,155 +136,44 @@
             { id: 'tot', n: 'YHTEENSÄ', r: true, c: 'total-row' }
         ];
 
+        function addP() {
+            const input = document.getElementById('p-name');
+            const name = input.value.trim().toUpperCase();
+            if (name && players.length < 6) {
+                players.push(name);
+                input.value = '';
+                document.getElementById('p-list').innerText = "Pelaajat: " + players.join(', ');
+                const startBtn = document.getElementById('start-btn');
+                startBtn.disabled = false;
+                startBtn.style.background = "#2980b9";
+            }
+        }
+
         function saveGame() {
             if (players.length === 0) return;
             const gameData = { players, activePlayerIndex, history, scores: {} };
             document.querySelectorAll('.score-input').forEach(i => {
                 gameData.scores[`${i.dataset.c}-${i.dataset.p}`] = i.value;
             });
-            localStorage.setItem('yatzy_v12_save', JSON.stringify(gameData));
+            localStorage.setItem('yatzy_v13_save', JSON.stringify(gameData));
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('yatzy_v12_save');
+            const saved = localStorage.getItem('yatzy_v13_save');
             if (saved) {
                 const data = JSON.parse(saved);
                 players = data.players;
                 activePlayerIndex = data.activePlayerIndex || 0;
                 history = data.history || [];
-                
                 start(false);
-                
                 Object.keys(data.scores).forEach(key => {
                     const input = document.querySelector(`input[data-c="${key.split('-')[0]}"][data-p="${key.split('-')[1]}"]`);
                     if (input) input.value = data.scores[key];
                 });
-                
                 players.forEach((_, i) => calc(i));
                 renderHistory();
                 updateUI();
             }
-        }
-
-        function clearGame() {
-            if (confirm("Nollataanko koko peli ja historia?")) {
-                localStorage.removeItem('yatzy_v12_save');
-                location.reload();
-            }
-        }
-
-        function archiveRound() {
-            if (hasErrors(activePlayerIndex)) {
-                alert("Korjaa punaiset virheet ensin!");
-                return;
-            }
-            
-            // Poimitaan kierroksen tulokset
-            const roundScores = players.map((_, i) => {
-                const total = parseInt(document.getElementById(`r-tot-${i}`).innerText) || 0;
-                return total;
-            });
-
-            history.push(roundScores);
-            
-            // Tyhjennetään nykyinen taulukko
-            document.querySelectorAll('.score-input').forEach(input => input.value = "");
-            players.forEach((_, i) => calc(i));
-            
-            activePlayerIndex = 0;
-            renderHistory();
-            updateUI();
-            saveGame();
-        }
-
-        function renderHistory() {
-            const hSec = document.getElementById('history-section');
-            if (history.length === 0) {
-                hSec.style.display = 'none';
-                return;
-            }
-            hSec.style.display = 'block';
-
-            const head = document.getElementById('hist-header');
-            const body = document.getElementById('hist-body');
-            
-            // Otsikko (Nimet)
-            head.innerHTML = '<th class="row-label">Pelaaja</th>';
-            players.forEach(p => head.innerHTML += `<th>${p}</th>`);
-
-            body.innerHTML = '';
-
-            // SUMMA-rivi (Boldattu, heti nimien alla)
-            const sumRow = document.createElement('tr');
-            sumRow.className = 'grand-total-row';
-            sumRow.innerHTML = '<td class="row-label">KOKONAISSUMMA</td>';
-            
-            players.forEach((_, pi) => {
-                const total = history.reduce((sum, round) => sum + round[pi], 0);
-                sumRow.innerHTML += `<td>${total}</td>`;
-            });
-            body.appendChild(sumRow);
-
-            // Kierrosrivit
-            history.forEach((round, ri) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="row-label">Kierros ${ri + 1}</td>`;
-                round.forEach(score => tr.innerHTML += `<td>${score}</td>`);
-                body.appendChild(tr);
-            });
-        }
-
-        function addP() {
-            const i = document.getElementById('p-name');
-            const v = i.value.trim().toUpperCase();
-            if (v && players.length < 6) {
-                players.push(v);
-                i.value = '';
-                document.getElementById('p-list').innerText = "Pelaajat: " + players.join(', ');
-                const btn = document.getElementById('start-btn');
-                btn.disabled = false;
-                btn.style.background = "#2980b9";
-            }
-        }
-
-        function hasErrors(pIdx) {
-            return document.querySelectorAll(`.score-input[data-p="${pIdx}"].invalid`).length > 0;
-        }
-
-        function setActive(index) {
-            if (index === activePlayerIndex) return;
-            if (hasErrors(activePlayerIndex)) {
-                alert("Korjaa punainen virhe ensin!");
-                return;
-            }
-            activePlayerIndex = index;
-            updateUI();
-            saveGame();
-        }
-
-        function updateUI() {
-            const hint = document.getElementById('status-hint');
-            hint.innerText = "VUORO: " + players[activePlayerIndex];
-            
-            document.querySelectorAll('#h-row th').forEach((th, i) => {
-                if (i === 0) return;
-                th.classList.toggle('active-p-header', (i - 1) === activePlayerIndex);
-            });
-
-            document.querySelectorAll('.col-cell').forEach(td => {
-                const pIdx = parseInt(td.dataset.pIdx);
-                const isActive = (pIdx === activePlayerIndex);
-                td.classList.toggle('active-col', isActive);
-                const input = td.querySelector('input');
-                if (input) {
-                    input.readOnly = !isActive;
-                }
-            });
-        }
-
-        function triggerNext() {
-            const nextIdx = (activePlayerIndex + 1) % players.length;
-            setActive(nextIdx);
         }
 
         function start(shouldSave) {
@@ -322,7 +209,6 @@
                         const input = document.createElement('input');
                         input.type = 'number';
                         input.inputMode = 'numeric';
-                        input.enterKeyHint = 'done';
                         input.className = 'score-input';
                         input.dataset.p = pi;
                         input.dataset.c = cat.id;
@@ -351,16 +237,12 @@
                 const c = cats.find(x => x.id === i.dataset.c);
                 let ok = true;
                 if (!isBlank) {
-                    if (v < 0) ok = false; 
-                    if (c.m && v > c.m) ok = false;
-                    if (c.min && v < c.min && v !== 0) ok = false;
-                    if (c.f && !c.f.includes(v)) ok = false;
+                    if (v < 0 || (c.m && v > c.m) || (c.min && v < c.min && v !== 0) || (c.f && !c.f.includes(v))) ok = false;
                 }
                 i.classList.toggle('invalid', !ok && !isBlank);
                 if (ok || isBlank) {
-                    const addVal = (v < 0) ? 0 : val;
-                    if (upperIds.includes(c.id)) upper += addVal;
-                    total += addVal;
+                    if (upperIds.includes(c.id)) upper += val;
+                    total += val;
                 }
             });
 
@@ -369,4 +251,27 @@
             if(s) s.innerText = upper; if(b) b.innerText = bonus; if(t) t.innerText = total + bonus;
         }
 
-        window.onload = loadGame;
+        function archiveRound() {
+            const roundScores = players.map((_, i) => parseInt(document.getElementById(`r-tot-${i}`).innerText) || 0);
+            history.push(roundScores);
+            document.querySelectorAll('.score-input').forEach(input => input.value = "");
+            players.forEach((_, i) => calc(i));
+            activePlayerIndex = 0;
+            renderHistory();
+            updateUI();
+            saveGame();
+        }
+
+        function renderHistory() {
+            const section = document.getElementById('history-section');
+            if (history.length === 0) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
+
+            const head = document.getElementById('hist-header');
+            const body = document.getElementById('hist-body');
+            head.innerHTML = '<th class="row-label">Pelaaja</th>' + players.map(p => `<th>${p}</th>`).join('');
+            
+            body.innerHTML = '';
+            const sumRow = document.createElement('tr');
+            sumRow.className = 'grand-total-row';
+            sumRow.innerHTML = '<td class="row-label">KOKONAISSUMMA</td>' + players.map((_, pi) => `<td>${history.reduce((s, r) => s + r[pi], 0)}</td>`).join
