@@ -9,72 +9,70 @@
             --primary: #2c3e50;
             --accent: #27ae60;
             --bg: #f4f7f6;
-            --error: #ffcccc;
             --inactive: #d1d8db;
             --active: #ffffff;
         }
 
-        html, body { overscroll-behavior-y: contain; background: var(--bg); margin: 0; padding: 10px; font-family: -apple-system, system-ui, sans-serif; }
+        html, body { background: var(--bg); margin: 0; padding: 10px; font-family: -apple-system, sans-serif; height: 100%; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); }
         
         #setup, #game-container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin: 0 auto 20px auto; }
         
         .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
-        input[type="text"] { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; appearance: none; }
+        input[type="text"] { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; color: black; }
         
-        button { color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        
-        #add-btn { background: var(--accent); min-width: 80px; }
-        #start-btn { width: 100%; margin-top: 10px; background: #bdc3c7; }
-        #next-round-btn { width: 100%; background: var(--accent); margin: 15px 0; }
-        #reset-btn { background: #e74c3c; width: 100%; margin-top: 20px; font-size: 14px; }
+        button { color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        #add-btn { background: var(--accent); }
+        #start-btn { width: 100%; background: #bdc3c7; margin-top: 10px; }
+        #next-round-btn { width: 100%; background: var(--accent); margin: 15px 0; font-size: 1.1rem; }
+        #reset-btn { background: #e74c3c; width: 100%; margin-top: 20px; opacity: 0.8; }
 
-        .table-wrapper { overflow-x: auto; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .table-wrapper { overflow-x: auto; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; min-width: 350px; }
-        th, td { border: 1px solid #bbb; padding: 8px 2px; text-align: center; font-size: 14px; }
+        th, td { border: 1px solid #bbb; padding: 6px 2px; text-align: center; font-size: 14px; }
         th { background: var(--primary); color: white; }
         
         .row-label { text-align: left; padding-left: 8px; font-weight: bold; background: #f8f9fa !important; min-width: 110px; position: sticky; left: 0; }
         .col-cell { background: var(--inactive); }
         .active-col { background: var(--active) !important; }
         
-        .score-input { width: 45px; height: 35px; text-align: center; border: 1px solid #999; border-radius: 4px; font-size: 16px; font-weight: bold; }
-        .invalid { background: var(--error) !important; border: 2px solid #e74c3c !important; }
-        .total-row { background: var(--primary) !important; color: white; font-weight: bold; }
+        .score-input { width: 42px; height: 35px; text-align: center; border: 1px solid #999; border-radius: 4px; font-size: 16px; font-weight: bold; background: white; color: black; }
+        .score-input:read-only { background: #eee; color: #777; }
+        .invalid { background: #ffcccc !important; border: 2px solid red !important; }
         
-        #history-section { margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 10px; }
+        .total-row { background: var(--primary) !important; color: white; font-weight: bold; }
+        #history-section { border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 20px; }
         .grand-total-row { background: #d5e6ed; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>Yatzy pisteet</h1>
+    <h2 style="text-align:center; color:var(--primary);">Yatzy</h2>
 
     <div id="setup">
         <p>Lisää pelaajat (1-6)</p>
         <div class="input-group">
-            <input type="text" id="p-name" placeholder="Nimi" maxlength="10" onkeydown="if(event.key==='Enter') addP()">
+            <input type="text" id="p-name" placeholder="Nimi" maxlength="10">
             <button id="add-btn" onclick="addP()">Lisää</button>
         </div>
-        <div id="p-list" style="margin-bottom:10px;">Pelaajat: -</div>
+        <div id="p-list">Pelaajat: -</div>
         <button id="start-btn" onclick="start(true)" disabled>ALOITA PELI</button>
     </div>
 
     <div id="game-container" style="display:none;">
-        <div id="status-hint" style="text-align:center; font-weight:bold; margin-bottom:10px;"></div>
+        <div id="status-hint" style="text-align:center; font-weight:bold; margin-bottom:10px; color:var(--accent);"></div>
         <div class="table-wrapper">
-            <table>
+            <table id="main-table">
                 <thead><tr id="h-row"><th class="row-label">Peli</th></tr></thead>
                 <tbody id="b-body"></tbody>
             </table>
         </div>
         <button id="next-round-btn" onclick="archiveRound()">Seuraava kierros</button>
+        
         <div id="history-section" style="display:none;">
-            <p style="text-align:center; font-weight:bold;">HISTORIA</p>
+            <p style="text-align:center; font-weight:bold;">TULOKSET</p>
             <div class="table-wrapper">
-                <table id="h-table">
+                <table>
                     <thead><tr id="hist-header"></tr></thead>
                     <tbody id="hist-body"></tbody>
                 </table>
@@ -101,41 +99,41 @@
         ];
 
         function addP() {
-            const input = document.getElementById('p-name');
-            const name = input.value.trim().toUpperCase();
+            const el = document.getElementById('p-name');
+            const name = el.value.trim().toUpperCase();
             if (name && players.length < 6) {
                 players.push(name);
-                input.value = '';
+                el.value = '';
                 document.getElementById('p-list').innerText = "Pelaajat: " + players.join(', ');
-                const sBtn = document.getElementById('start-btn');
-                sBtn.disabled = false;
-                sBtn.style.background = "#2980b9";
+                const btn = document.getElementById('start-btn');
+                btn.disabled = false;
+                btn.style.background = "#2980b9";
             }
         }
 
         function start(shouldSave) {
-            if (players.length === 0) return;
             document.getElementById('setup').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
             
             const hr = document.getElementById('h-row');
             const bb = document.getElementById('b-body');
-            hr.innerHTML = '<th class="row-label">Peli</th>' + players.map(p => `<th>${p}</th>`).join('');
             
-            bb.innerHTML = '';
+            hr.innerHTML = '<th class="row-label">Peli</th>' + players.map((p, i) => `<th onclick="setActive(${i})">${p}</th>`).join('');
+            
+            let html = '';
             cats.forEach(cat => {
-                let tr = `<tr class="${cat.c||''}">`;
-                tr += `<td class="row-label">${cat.n}</td>`;
+                html += `<tr class="${cat.c || ''}"><td class="row-label">${cat.n}</td>`;
                 players.forEach((_, pi) => {
                     if (cat.r) {
-                        tr += `<td id="r-${cat.id}-${pi}" class="sum-display">0</td>`;
+                        html += `<td id="r-${cat.id}-${pi}" style="font-weight:bold; color:#2980b9;">0</td>`;
                     } else {
-                        tr += `<td class="col-cell" data-p="${pi}"><input type="number" class="score-input" data-p="${pi}" data-c="${cat.id}" oninput="calc(${pi})" onblur="autoNext()"></td>`;
+                        html += `<td class="col-cell" data-p="${pi}"><input type="number" class="score-input" data-p="${pi}" data-c="${cat.id}" oninput="calc(${pi})"></td>`;
                     }
                 });
-                tr += `</tr>`;
-                bb.innerHTML += tr;
+                html += '</tr>';
             });
+            bb.innerHTML = html;
+            
             updateUI();
             if (shouldSave) saveGame();
         }
@@ -156,10 +154,9 @@
                     total += v;
                 }
             });
-            const bonus = upper >= 63 ? 50 : 0;
             document.getElementById(`r-sum-${pi}`).innerText = upper;
-            document.getElementById(`r-bon-${pi}`).innerText = bonus;
-            document.getElementById(`r-tot-${pi}`).innerText = total + bonus;
+            document.getElementById(`r-bon-${pi}`).innerText = upper >= 63 ? 50 : 0;
+            document.getElementById(`r-tot-${pi}`).innerText = total + (upper >= 63 ? 50 : 0);
             saveGame();
         }
 
@@ -168,9 +165,7 @@
             history.push(round);
             document.querySelectorAll('.score-input').forEach(i => i.value = "");
             players.forEach((_, i) => calc(i));
-            activePlayerIndex = 0;
             renderHistory();
-            updateUI();
             saveGame();
         }
 
@@ -179,16 +174,23 @@
             document.getElementById('history-section').style.display = 'block';
             const head = document.getElementById('hist-header');
             const body = document.getElementById('hist-body');
+            
             head.innerHTML = '<th class="row-label">Pelaaja</th>' + players.map(p => `<th>${p}</th>`).join('');
             
-            let html = `<tr class="grand-total-row"><td class="row-label">SUMMA</td>`;
-            players.forEach((_, pi) => html += `<td>${history.reduce((s, r) => s + r[pi], 0)}</td>`);
-            html += `</tr>`;
+            let h = `<tr class="grand-total-row"><td class="row-label">SUMMA</td>`;
+            players.forEach((_, pi) => h += `<td>${history.reduce((s, r) => s + r[pi], 0)}</td>`);
+            h += '</tr>';
             
             history.forEach((r, i) => {
-                html += `<tr><td class="row-label">Kierros ${i+1}</td>${r.map(s => `<td>${s}</td>`).join('')}</tr>`;
+                h += `<tr><td class="row-label">Kierros ${i+1}</td>` + r.map(s => `<td>${s}</td>`).join('') + '</tr>';
             });
-            body.innerHTML = html;
+            body.innerHTML = h;
+        }
+
+        function setActive(idx) {
+            activePlayerIndex = idx;
+            updateUI();
+            saveGame();
         }
 
         function updateUI() {
@@ -201,19 +203,14 @@
             });
         }
 
-        function autoNext() {
-            activePlayerIndex = (activePlayerIndex + 1) % players.length;
-            updateUI();
-        }
-
         function saveGame() {
             const data = { players, history, activePlayerIndex, scores: {} };
             document.querySelectorAll('.score-input').forEach(i => data.scores[`${i.dataset.c}-${i.dataset.p}`] = i.value);
-            localStorage.setItem('yatzy_v14_final', JSON.stringify(data));
+            localStorage.setItem('YATZY_V15_ULTRA', JSON.stringify(data));
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('yatzy_v14_final');
+            const saved = localStorage.getItem('YATZY_V15_ULTRA');
             if (saved) {
                 const data = JSON.parse(saved);
                 players = data.players; history = data.history || []; activePlayerIndex = data.activePlayerIndex || 0;
@@ -229,6 +226,12 @@
         }
 
         function clearGame() { if (confirm("Nollaa kaikki?")) { localStorage.clear(); location.reload(); } }
+        
+        // Estetään "Enter" nimen lisäyksessä aiheuttamasta sivun päivitystä
+        document.getElementById('p-name').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addP(); }
+        });
+
         window.onload = loadGame;
     </script>
 </body>
