@@ -2,31 +2,29 @@
 
 <html lang="fi">
 <head>
-
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-W3XL20NCRR"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-W3XL20NCRR');
-</script>
-    
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#2c3e50">
-    <title>Yatzy Turnaus - Scoreboard</title>
-    <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #27ae60;
-            --bg: #f4f7f6;
-            --inactive: #d1d8db;
-            --active: #ffffff;
-        }
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-W3XL20NCRR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
 ```
+  gtag('config', 'G-W3XL20NCRR');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2c3e50">
+<title>Yatzy Turnaus - Scoreboard</title>
+<style>
+    :root {
+        --primary: #2c3e50;
+        --accent: #27ae60;
+        --bg: #f4f7f6;
+        --inactive: #d1d8db;
+        --active: #ffffff;
+    }
+
     html, body { background: var(--bg); margin: 0; padding: 4px; font-family: Verdana, Geneva, sans-serif; height: 100%; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
@@ -81,15 +79,18 @@
     .grand-total-row { background: #d5e6ed; font-weight: bold; color: var(--primary); }
     .hint { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; text-align: center; font-weight: bold; }
 </style>
-
+```
 
 </head>
 <body>
 
-
+```
 <h2 style="text-align:center; color:var(--primary); margin-top: 10px;">Yatzy Turnaus</h2>
 
 <div id="setup">
+    <div id="chrome-banner" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px; margin-bottom:12px; font-size:13px; color:#856404;">
+        📱 Paras kokemus iPhonella saadaan Safarilla. Kopioi linkki ja avaa se Safarissa.
+    </div>
     <p style="margin-top: 0;">Lisää pelaajat (1-6)</p>
     <div class="input-group">
         <input type="text" id="p-name" placeholder="Pelaajan nimi" maxlength="10" onkeypress="if(event.key==='Enter') addP()">
@@ -384,8 +385,18 @@
         body.innerHTML = h;
     }
 
-    window.onload = loadGame;
-</script
+    window.onload = () => {
+        // Näytä banneri vain iPhonella Chrome-selaimessa
+        const ua = navigator.userAgent;
+        const isIphone = /iPhone/.test(ua);
+        const isChrome = /CriOS/.test(ua); // CriOS = Chrome iOS
+        if (isIphone && isChrome) {
+            document.getElementById('chrome-banner').style.display = 'block';
+        }
+        loadGame();
+    };
+</script>
+```
 
 </body>
 </html>
