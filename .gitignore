@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Editori ja työkalut
+.vscode/
+.idea/
+*.swp
+
+# Claude Code: henkilökohtaiset asetukset eivät kuulu repoon
+.claude/settings.local.json
+
+# Mahdolliset paikalliset tunnukset ja lokit
+.env
+*.env
+*.log
+node_modules/
