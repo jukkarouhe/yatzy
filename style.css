@@ -59,3 +59,25 @@ th.active-p-header { background: #27ae60 !important; border-bottom: 3px solid #1
 #history-section { border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 20px; }
 .grand-total-row { background: #d5e6ed; font-weight: bold; color: var(--primary); }
 .hint { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; text-align: center; font-weight: bold; }
+
+/* --- Otsikko ja kielenvaihto (liput) --- */
+#app-header { position: relative; max-width: 600px; margin: 0 auto; }
+#app-header h2 {
+    text-align: center; color: var(--primary); margin: 10px 0 0.83em 0;
+    padding: 0 84px 0 0; white-space: nowrap;
+    font-size: clamp(1.1rem, 5vw, 1.5rem);
+}
+.lang-switch { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px; }
+.flag-btn { background: none; border: 2px solid transparent; border-radius: 6px; padding: 2px; line-height: 0; opacity: 0.55; cursor: pointer; }
+.flag-btn svg { display: block; border: 1px solid #bbb; }
+.flag-btn.active { opacity: 1; }
+
+/* --- Sääntöpaneeli --- */
+.link-btn { background: none; color: #2980b9; text-decoration: underline; font-weight: 500; font-size: 1rem; padding: 4px 8px; }
+#rules-panel { text-align: left; font-size: 13px; line-height: 1.45; border-top: 1px dashed #ccc; margin-top: 10px; padding-top: 4px; color: #333; }
+#rules-panel h3 { color: var(--primary); margin: 8px 0 4px; font-size: 16px; }
+#rules-panel h4 { color: var(--primary); margin: 12px 0 2px; font-size: 14px; }
+#rules-panel p { margin: 4px 0; }
+#rules-panel ul { margin: 4px 0; padding-left: 20px; }
+#rules-panel li { margin: 2px 0; }
+#rules-panel a { color: #2980b9; }

@@ -23,35 +23,38 @@
 <body>
 
 
-<h2 style="text-align:center; color:var(--primary); margin-top: 10px;">Yatzy Turnaus</h2>
+<div id="app-header">
+    <h2 data-i18n="title">Yatzy Turnaus</h2>
+    <div id="lang-switch" class="lang-switch"></div>
+</div>
 
 <div id="setup">
-    <div id="chrome-banner" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px; margin-bottom:12px; font-size:13px; color:#856404;">
-        📱 Paras kokemus iPhonella saadaan Safarilla. Kopioi linkki ja avaa se Safarissa.
+    <div id="chrome-banner" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px; margin-bottom:12px; font-size:13px; color:#856404;" data-i18n="banner">
     </div>
-    <p style="margin-top: 0;">Lisää pelaajat (1-6)</p>
+    <p style="margin-top: 0;" data-i18n="addPlayers">Lisää pelaajat (1-6)</p>
     <div class="input-group">
-        <input type="text" id="p-name" placeholder="Pelaajan nimi" maxlength="10" onkeypress="if(event.key==='Enter') addP()">
-        <button id="add-btn" onclick="addP()">Lisää</button>
+        <input type="text" id="p-name" placeholder="Pelaajan nimi" data-i18n-ph="playerName" maxlength="10" onkeypress="if(event.key==='Enter') addP()">
+        <button id="add-btn" onclick="addP()" data-i18n="add">Lisää</button>
     </div>
     <div id="p-list" style="margin-bottom:15px; font-weight:500; min-height: 20px;">Pelaajat: -</div>
-    <button id="start-btn" onclick="start(true)" disabled>ALOITA PELI</button>
+    <button id="start-btn" onclick="start(true)" disabled data-i18n="start">ALOITA PELI</button>
     <p style="text-align: center; margin-top: 25px;">
-        <a href="https://fi.wikipedia.org/wiki/Yatzy" target="_blank" rel="noopener" style="color: #2980b9; text-decoration: underline; font-weight: 500;">Yatzy säännöt</a>
+        <button type="button" id="rules-toggle" class="link-btn" onclick="toggleRules()" aria-expanded="false" aria-controls="rules-panel">Yatzy säännöt</button>
     </p>
+    <div id="rules-panel" style="display:none;"></div>
 </div>
 
 <div id="game-container" style="display:none;">
     <div id="status-hint" class="hint">VUORO: -</div>
     <div class="table-wrapper">
         <table id="main-table">
-            <thead><tr id="h-row"><th class="row-label">Kategoria</th></tr></thead>
+            <thead><tr id="h-row"><th class="row-label" data-i18n="category">Kategoria</th></tr></thead>
             <tbody id="b-body"></tbody>
         </table>
     </div>
-    <button id="next-round-btn" onclick="archiveRound()">Tallenna kierros &amp; Nollaa tulostaulu</button>
+    <button id="next-round-btn" onclick="archiveRound()" data-i18n="saveRound">Tallenna kierros &amp; Nollaa tulostaulu</button>
     <div id="history-section" style="display:none;">
-        <p style="text-align:center; font-weight:bold; margin-bottom: 10px;">TURNAUKSEN KOKONAISTILANNE</p>
+        <p style="text-align:center; font-weight:bold; margin-bottom: 10px;" data-i18n="histTitle">TURNAUKSEN KOKONAISTILANNE</p>
         <div class="table-wrapper">
             <table>
                 <thead><tr id="hist-header"></tr></thead>
@@ -59,9 +62,10 @@
             </table>
         </div>
     </div>
-    <button id="reset-btn" onclick="clearGame()">Nollaa koko peli</button>
+    <button id="reset-btn" onclick="clearGame()" data-i18n="reset">Nollaa koko peli</button>
 </div>
 
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 
 

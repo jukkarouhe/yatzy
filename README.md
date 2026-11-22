@@ -14,13 +14,15 @@ Ei asennusta: avaa linkki selaimessa ja pelaa. iPhonella paras kokemus saadaan S
 - Vuoro siirtyy seuraavalle pelaajalle, kun pistekenttä on täytetty
 - Turnauksen kokonaistilanne: kierrokset tallennetaan ja summataan
 - Peli säilyy selaimen `localStorage`ssa, joten sivun voi sulkea kesken pelin
+- Kaksi kieltä: suomi (oletus) ja englanti. Kieltä vaihdetaan otsikon vieressä olevilla lipuilla, myös kesken pelin
+- Tiiviit säännöt suomeksi ja englanniksi suoraan etusivulla ("Yatzy säännöt")
 
 ## Tekniikka
 
 - Puhdas HTML, CSS ja JavaScript, ei riippuvuuksia eikä build-vaihetta
-- Tiedostot: `index.html` (rakenne), `style.css` (tyylit), `app.js` (pelilogiikka)
+- Tiedostot: `index.html` (rakenne), `style.css` (tyylit), `app.js` (pelilogiikka), `i18n.js` (kielet ja säännöt)
 - Julkaisu GitHub Pagesin kautta `main`-haarasta
-- Käyttöliittymä on suomeksi
+- Käyttöliittymä on suomeksi ja englanniksi
 
 ## Kehitys paikallisesti
 
