@@ -8,7 +8,9 @@ Noppa-yatzyn pistetaulukko ja turnauspeli puhelimelle. Loppukäyttäjä avaa lin
 
 ## Rakenne
 
-- `index.html` – koko sovellus tällä hetkellä yhdessä tiedostossa (HTML + CSS + JS)
+- `index.html` – sivun rakenne (HTML) ja Google Analytics -pätkä
+- `style.css` – kaikki tyylit
+- `app.js` – pelilogiikka (pelaajat, pisteiden laskenta, vuoronvaihto, tallennus)
 - `README.md`, `.gitignore`, `CLAUDE.md`
 
 ## Tärkeät rajoitteet
@@ -23,17 +25,15 @@ Noppa-yatzyn pistetaulukko ja turnauspeli puhelimelle. Loppukäyttäjä avaa lin
 
 Kategoriat ja niiden rajat ovat `cats`-taulukossa: `m` = suurin sallittu arvo, `min` = pienin sallittu nollasta poikkeava arvo, `f` = sallitut kiinteät arvot (suorat ja Yatzy). Bonus 50 pistettä, kun yläosan summa ≥ 63. Jos sääntöjä muutetaan (esim. "2 Paria" -rajat), päivitä vain `cats` ja tarkista, että syötteen validointi (`calc`) toimii edelleen.
 
-## Suunniteltu: tiedoston jako
+## Tiedostojako (tehty 22.11.2026)
 
-Myöhemmin `index.html` jaetaan erillisiksi tiedostoiksi, kun Jukka pyytää sitä. Ehdoton vaatimus: pelin pitää toimia edelleen pelkällä linkillä ilman asennusta. Tämän vuoksi:
+`index.html` jaettiin erillisiksi tiedostoiksi niin, että pelin voi edelleen pelata pelkällä linkillä. Säännöt, jotka pitää säilyttää:
 
-- Tiedostot: `index.html`, `style.css`, `app.js` (tarvittaessa lisää), kaikki samassa kansiossa tai alikansioissa
-- Käytä **suhteellisia polkuja** (`href="style.css"`, `src="app.js"`), ei absoluuttisia, jotta sivu toimii GitHub Pagesin alipolussa `/yatzy/`
-- Käytä tavallista `<script src="app.js"></script>` -latausta, **ei** `type="module"`. Moduulit eivät toimi, jos tiedosto avataan suoraan levyltä (`file://`), ja HTML:n `onclick`-attribuutit tarvitsevat globaalit funktiot
+- Käytä **suhteellisia polkuja** (`href="style.css"`, `src="app.js"`), jotta sivu toimii GitHub Pagesin alipolussa `/yatzy/`
+- Lataa skripti tavallisesti `<script src="app.js"></script>`, **ei** `type="module"`. Moduulit eivät toimi, jos tiedosto avataan suoraan levyltä (`file://`), ja HTML:n `onclick`-attribuutit tarvitsevat globaalit funktiot (`addP`, `start`, `archiveRound`, `clearGame`)
 - Pidä `gtag`-pätkä `index.html`:ssä
 - Ei build-vaihetta eikä ulkoisia CDN-riippuvuuksia
-- Testaa jaon jälkeen: avaa `index.html` tuplaklikkaamalla ja GitHub Pagesin kautta puhelimella; vanhan pelin pitää latautua `localStorage`sta
-- Selaimen välimuisti voi näyttää vanhoja CSS/JS-tiedostoja julkaisun jälkeen; harkitse versiotunnusta (`app.js?v=2`) tarvittaessa
+- Selaimen välimuisti voi näyttää vanhoja CSS/JS-tiedostoja julkaisun jälkeen; jos näin käy, lisää versiotunnus (`app.js?v=2`, `style.css?v=2`)
 
 ## Työtapa
 

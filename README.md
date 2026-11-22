@@ -18,6 +18,7 @@ Ei asennusta: avaa linkki selaimessa ja pelaa. iPhonella paras kokemus saadaan S
 ## Tekniikka
 
 - Puhdas HTML, CSS ja JavaScript, ei riippuvuuksia eikä build-vaihetta
+- Tiedostot: `index.html` (rakenne), `style.css` (tyylit), `app.js` (pelilogiikka)
 - Julkaisu GitHub Pagesin kautta `main`-haarasta
 - Käyttöliittymä on suomeksi
 
