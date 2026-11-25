@@ -183,6 +183,7 @@ function start(shouldSave) {
         bb.appendChild(tr);
     });
 
+    players.forEach((_, i) => calc(i));
     updateUI();
     if (shouldSave) saveGame();
 }
@@ -190,7 +191,7 @@ function start(shouldSave) {
 // --- Laskenta ---
 function calc(pi) {
     const inputs = document.querySelectorAll(`.score-input[data-p="${pi}"]`);
-    let upper = 0, total = 0;
+    let upper = 0, total = 0, stock = 0;
     const upperIds = ['1', '2', '3', '4', '5', '6'];
 
     inputs.forEach(i => {
@@ -207,7 +208,11 @@ function calc(pi) {
         }
         i.classList.toggle('invalid', !ok && !isBlank);
         if (ok || isBlank) {
-            if (upperIds.includes(c.id)) upper += val;
+            if (upperIds.includes(c.id)) {
+                upper += val;
+                // Varasto: täytetyn yläkerran ruudun ero tavoitteeseen (3 kpl kutakin)
+                if (!isBlank) stock += val - 3 * parseInt(c.id);
+            }
             total += val;
         }
     });
@@ -216,7 +221,13 @@ function calc(pi) {
     const s = document.getElementById(`r-sum-${pi}`);
     const b = document.getElementById(`r-bon-${pi}`);
     const t = document.getElementById(`r-tot-${pi}`);
-    if (s) s.innerText = upper;
+    if (s) {
+        s.textContent = upper + ' ';
+        const sp = document.createElement('span');
+        sp.className = 'stock';
+        sp.textContent = (stock >= 0 ? '+' : '\u2212') + Math.abs(stock);
+        s.appendChild(sp);
+    }
     if (b) b.innerText = bonus;
     if (t) t.innerText = total + bonus;
 }
