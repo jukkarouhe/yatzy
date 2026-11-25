@@ -222,7 +222,7 @@ function calc(pi) {
     const b = document.getElementById(`r-bon-${pi}`);
     const t = document.getElementById(`r-tot-${pi}`);
     if (s) {
-        s.textContent = upper + ' ';
+        s.textContent = upper;
         const sp = document.createElement('span');
         sp.className = 'stock';
         sp.textContent = (stock >= 0 ? '+' : '\u2212') + Math.abs(stock);
