@@ -221,14 +221,16 @@ function calc(pi) {
     const s = document.getElementById(`r-sum-${pi}`);
     const b = document.getElementById(`r-bon-${pi}`);
     const t = document.getElementById(`r-tot-${pi}`);
-    if (s) {
-        s.textContent = upper;
+    if (s) s.textContent = upper;
+    if (b) {
+        // Varasto näytetään Bonus-rivillä bonusluvun yläpuolella
+        b.textContent = '';
         const sp = document.createElement('span');
         sp.className = 'stock';
         sp.textContent = (stock >= 0 ? '+' : '\u2212') + Math.abs(stock);
-        s.appendChild(sp);
+        b.appendChild(sp);
+        b.appendChild(document.createTextNode(bonus));
     }
-    if (b) b.innerText = bonus;
     if (t) t.innerText = total + bonus;
 }
 

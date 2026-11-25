@@ -56,7 +56,7 @@ th.active-p-header { background: #27ae60 !important; border-bottom: 3px solid #1
 .invalid { background: #ffcccc !important; border: 2px solid #e74c3c !important; color: #c0392b; }
 .total-row { background: var(--primary) !important; color: white; font-weight: bold; }
 .sum-display { font-weight: bold; color: #2980b9; }
-.stock { font-size: 10px; font-style: italic; font-weight: normal; color: #555; margin-left: 3px; }
+.stock { display: block; font-size: 10px; font-style: italic; font-weight: normal; color: #555; line-height: 1.1; }
 #history-section { border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 20px; }
 .grand-total-row { background: #d5e6ed; font-weight: bold; color: var(--primary); }
 .hint { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; text-align: center; font-weight: bold; }
